@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yannss Store - Lucky Spin & Claim Reward</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Canvas Confetti Library untuk efek kemenangan -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+  :root{
+    --blue:#00a2ff;
+    --blue-dark:#0b6fd1;
+    --navy:#0a1030;
+    --green:#02b757;
+    --green-dark:#018a41;
+    --yellow:#ffd23f;
+    --red:#ff4d4d;
+    --panel:#232527;
+    --panel-line:#393b3d;
+    --field:#1a1c1e;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+  html,body{margin:0;padding:0;}
+
+  body{
+    font-family:'Fredoka','Trebuchet MS','Segoe UI',sans-serif;
+    color:#fff;
+    min-height:100vh;
+    background:
+      linear-gradient(rgba(255,255,255,.05) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 2px, transparent 2px),
+      radial-gradient(circle at 50% 0%, #1b57d6 0%, #0e2a86 38%, var(--navy) 100%);
+    background-size:48px 48px, 48px 48px, 100% 100%;
+    background-attachment:fixed;
+    overflow-x:hidden;
+  }
+
+  /* ===== Balok melayang di background ===== */
+  .cubes{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .cube{
+    position:absolute;
+    bottom:-100px;
+    border:3px solid rgba(255,255,255,.35);
+    border-radius:8px;
+    box-shadow:inset 0 -6px 0 rgba(0,0,0,.2);
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) rotate(0deg);opacity:0;}
+    10%{opacity:.9;}
+    90%{opacity:.9;}
+    100%{transform:translateY(-120vh) rotate(360deg);opacity:0;}
+  }
+
+  main{position:relative;z-index:1;}
+
+  .screen{
+    display:none;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:24px 16px 40px;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .screen.active{display:flex;animation:pop .45s cubic-bezier(.2,1.4,.4,1);}
+  @keyframes pop{
+    from{opacity:0;transform:scale(.88) translateY(20px);}
+    to{opacity:1;transform:scale(1) translateY(0);}
+  }
+
+  /* ===== WELCOME ===== */
+  .tag{
+    display:inline-block;
+    background:rgba(0,0,0,.35);
+    border:2px solid rgba(255,255,255,.25);
+    padding:6px 16px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:1px;
+    margin-bottom:22px;
+  }
+
+  .logo{
+    width:96px;height:96px;
+    margin:0 auto 20px;
+    border-radius:22px;
+    background:linear-gradient(145deg,#37b6ff,#0a6fd8);
+    border:5px solid #fff;
+    box-shadow:0 8px 0 #07468a, 0 18px 30px rgba(0,0,0,.45);
+    display:flex;align-items:center;justify-content:center;
+    font-size:56px;font-weight:700;
+    transform:rotate(-8deg);
+    text-shadow:0 4px 0 rgba(0,0,0,.3);
+    animation:bob 2.6s ease-in-out infinite;
+  }
+  @keyframes bob{
+    0%,100%{transform:rotate(-8deg) translateY(0);}
+    50%{transform:rotate(-4deg) translateY(-10px);}
+  }
+
+  .welcome-small{
+    font-size:clamp(22px,6vw,30px);
+    font-weight:600;
+    margin:0 0 4px;
+    text-shadow:0 3px 0 rgba(0,0,0,.35);
+  }
+  .title{
+    font-size:clamp(46px,14vw,78px);
+    line-height:1;
+    font-weight:700;
+    margin:0 0 18px;
+    color:#fff;
+    text-shadow:0 4px 0 #0b6fd1, 0 8px 0 #084a8f, 0 16px 22px rgba(0,0,0,.5);
+    letter-spacing:1px;
+  }
+  .title span{
+    color:var(--yellow);
+    text-shadow:0 4px 0 #c78b00, 0 8px 0 #7a5200, 0 16px 22px rgba(0,0,0,.5);
+  }
+
+  .sub{
+    max-width:420px;
+    font-size:18px;
+    font-weight:500;
+    margin:0 auto 18px;
+    opacity:.95;
+  }
+
+  .motivasi{
+    min-height:48px;
+    max-width:420px;
+    margin:0 auto 28px;
+    background:rgba(255,210,63,.14);
+    border:3px dashed var(--yellow);
+    color:var(--yellow);
+    border-radius:16px;
+    padding:10px 16px;
+    font-weight:600;
+    font-size:17px;
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .35s, transform .35s;
+  }
+  .motivasi.hide{opacity:0;transform:translateY(8px);}
+
+  /* ===== TOMBOL ===== */
+  .btn{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:16px;
+    font-weight:700;
+    font-size:20px;
+    color:#fff;
+    padding:16px 30px;
+    letter-spacing:.5px;
+    text-decoration:none;
+    display:inline-block;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn-green{
+    background:linear-gradient(#2fe27f,var(--green));
+    box-shadow:0 7px 0 var(--green-dark), 0 14px 22px rgba(0,0,0,.4);
+    text-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+  .btn-blue{
+    background:linear-gradient(#45b9ff,var(--blue));
+    box-shadow:0 7px 0 var(--blue-dark), 0 14px 22px rgba(0,0,0,.4);
+    text-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+  .btn-gray{
+    background:linear-gradient(#5b5f63,#43464a);
+    box-shadow:0 6px 0 #2a2c2e, 0 12px 18px rgba(0,0,0,.35);
+    font-size:16px;padding:12px 22px;
+  }
+  .btn:active{transform:translateY(6px);}
+  .btn-green:active{box-shadow:0 1px 0 var(--green-dark), 0 6px 10px rgba(0,0,0,.4);}
+  .btn-blue:active{box-shadow:0 1px 0 var(--blue-dark), 0 6px 10px rgba(0,0,0,.4);}
+  .btn-gray:active{box-shadow:0 0 0 #2a2c2e;}
+
+  .btn-big{
+    font-size:clamp(18px,5vw,24px);
+    padding:18px 28px;
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.05);}
+  }
+  .btn-big:active{animation:none;}
+
+  .foot{margin-top:34px;font-size:13px;opacity:.65;}
+
+  /* ===== PANEL FORM ===== */
+  .panel{
+    width:100%;
+    max-width:480px;
+    background:var(--panel);
+    border:4px solid var(--panel-line);
+    border-radius:22px;
+    box-shadow:0 8px 0 #111214, 0 24px 44px rgba(0,0,0,.55);
+    overflow:hidden;
+    text-align:left;
+  }
+  .panel-head{
+    background:linear-gradient(90deg,#0a8fe8,#2f6bff);
+    padding:16px 20px;
+    font-size:22px;
+    font-weight:700;
+    text-shadow:0 2px 0 rgba(0,0,0,.3);
+    display:flex;align-items:center;gap:10px;
+  }
+  .panel-body{padding:22px 20px 26px;}
+
+  .field{margin-bottom:20px;}
+  .field label.lbl{
+    display:block;
+    font-weight:600;
+    font-size:16px;
+    margin-bottom:8px;
+  }
+  .field input[type="text"]{
+    width:100%;
+    font-family:inherit;
+    font-size:17px;
+    font-weight:500;
+    color:#fff;
+    background:var(--field);
+    border:3px solid var(--panel-line);
+    border-radius:14px;
+    padding:13px 15px;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field input[type="text"]::placeholder{color:#7d8185;}
+  .field input[type="text"]:focus{
+    border-color:var(--blue);
+    box-shadow:0 0 0 4px rgba(0,162,255,.25);
+  }
+  .field.error input[type="text"]{border-color:var(--red);}
+
+  .radio-group{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .radio-option{
+    display:flex;
+    align-items:center;
+    background:var(--field);
+    border:3px solid var(--panel-line);
+    border-radius:14px;
+    padding:12px 16px;
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .radio-option:hover{border-color:var(--blue);}
+  .radio-option input[type="radio"]{
+    margin-right:12px;
+    accent-color:var(--yellow);
+    transform:scale(1.3);
+  }
+  .radio-option span{font-weight:600;font-size:16px;}
+
+  .hidden{display:none !important;}
+
+  .err{
+    display:none;
+    color:var(--red);
+    font-size:14px;
+    font-weight:600;
+    margin-top:6px;
+  }
+  .field.error .err{display:block;animation:shake .35s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    75%{transform:translateX(6px);}
+  }
+
+  /* ===== PILIHAN WAKTU ===== */
+  .time-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  @media (min-width:420px){
+    .time-grid{grid-template-columns:repeat(4,1fr);}
+  }
+  .chip{position:relative;cursor:pointer;}
+  .chip input{position:absolute;opacity:0;pointer-events:none;}
+  .chip span{
+    display:block;
+    text-align:center;
+    font-weight:600;
+    font-size:15px;
+    padding:11px 4px;
+    background:var(--field);
+    border:3px solid var(--panel-line);
+    border-radius:12px;
+    box-shadow:0 4px 0 #0e0f10;
+    transition:transform .08s, box-shadow .08s, background .15s, border-color .15s;
+  }
+  .chip:active span{transform:translateY(3px);box-shadow:0 1px 0 #0e0f10;}
+  .chip input:checked + span{
+    background:linear-gradient(#2fe27f,var(--green));
+    border-color:#b8ffd6;
+    box-shadow:0 4px 0 var(--green-dark), 0 0 14px rgba(47,226,127,.55);
+    text-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+  .field.error .time-grid{outline:3px solid var(--red);outline-offset:6px;border-radius:14px;}
+
+  .actions{display:flex;flex-direction:column;gap:14px;align-items:center;margin-top:8px;}
+  .actions .btn{width:100%;}
+
+  /* ===== LAYAR SPIN WHEEL ===== */
+  .wheel-container{
+    position:relative;
+    width:340px;
+    height:340px;
+    margin:20px auto;
+  }
+  @media(min-width:400px){
+    .wheel-container{width:380px;height:380px;}
+  }
+
+  /* Outer Gold Ring (Mirip Gambar) */
+  .wheel-outer-ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:radial-gradient(circle, #ffe17d 0%, #d49a1d 60%, #7a5200 100%);
+    box-shadow:0 0 35px rgba(255, 210, 63, 0.6), inset 0 0 15px rgba(0,0,0,0.5);
+    border:6px solid #ffe89e;
+    padding:16px;
+  }
+
+  /* Roda Canvas */
+  #spinCanvas{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    box-shadow:0 0 15px rgba(0,0,0,0.8);
+    transition:transform 5s cubic-bezier(0.15, 0.95, 0.15, 1);
+  }
+
+  /* Pointer Atas (Segitiga Emas & Permata Merah) */
+  .wheel-pointer{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+    width:36px;
+    height:42px;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+  }
+  .wheel-pointer::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;
+    width:0;height:0;
+    border-left:18px solid transparent;
+    border-right:18px solid transparent;
+    border-top:32px solid #ffd23f;
+  }
+  .wheel-pointer::after{
+    content:"";
+    position:absolute;
+    top:4px;left:50%;
+    transform:translateX(-50%);
+    width:12px;height:12px;
+    background:#ff2a2a;
+    border-radius:50%;
+    box-shadow:inset 0 2px 2px rgba(255,255,255,0.8);
+  }
+
+  /* Tombol Tengah (NOW! / SPIN!) */
+  .wheel-center-btn{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    z-index:9;
+    width:84px;height:84px;
+    border-radius:50%;
+    background:radial-gradient(circle, #ffe373 0%, #e09400 70%, #9e6300 100%);
+    border:4px solid #fff;
+    box-shadow:0 0 20px rgba(0,0,0,0.6), inset 0 4px 6px rgba(255,255,255,0.8);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:22px;
+    color:#5e3a00;
+    text-shadow:0 1px 0 rgba(255,255,255,0.6);
+    cursor:pointer;
+    user-select:none;
+    transition:transform .1s;
+  }
+  .wheel-center-btn:active{
+    transform:translate(-50%,-50%) scale(0.92);
+  }
+
+  .spin-result-box{
+    margin-top:16px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--yellow);
+    min-height:36px;
+    text-shadow:0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  /* ===== LOADING / KIRIM ===== */
+  .spinner{
+    width:84px;height:84px;
+    margin:0 auto 24px;
+    border-radius:18px;
+    background:var(--blue);
+    border:5px solid #fff;
+    box-shadow:0 8px 0 #07468a;
+    animation:spin 1.2s linear infinite;
+  }
+  @keyframes spin{
+    0%{transform:rotate(0deg) scale(1);}
+    50%{transform:rotate(180deg) scale(.85);}
+    100%{transform:rotate(360deg) scale(1);}
+  }
+  .send-title{font-size:clamp(26px,7vw,34px);font-weight:700;margin:0 0 10px;text-shadow:0 3px 0 rgba(0,0,0,.35);}
+  .bar{
+    width:100%;max-width:340px;height:22px;
+    background:#101214;
+    border:3px solid var(--panel-line);
+    border-radius:999px;
+    margin:18px auto 22px;
+    overflow:hidden;
+  }
+  .bar i{
+    display:block;height:100%;width:0;
+    background:repeating-linear-gradient(45deg,#2fe27f,#2fe27f 12px,#1fc569 12px,#1fc569 24px);
+    transition:width 2.2s ease-out;
+  }
+  .note{max-width:380px;margin:0 auto 22px;font-size:15px;opacity:.85;}
+  .row{display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;max-width:360px;}
+</style>
+</head>
+
+<body>
+  <div class="cubes" id="cubes"></div>
+
+  <main>
+
+    <!-- ========== LAYAR 1: WELCOME ========== -->
+    <section class="screen active" id="screen-welcome">
+      <div class="tag">⭐ OFFICIAL STORE ⭐</div>
+      <div class="logo">Y</div>
+
+      <p class="welcome-small">Welcome to</p>
+      <h1 class="title"><span>Yannss</span> Store</h1>
+
+      <p class="sub">Siap jadi pemenang? Hadiah seru lagi nungguin kamu di sini! 🎮</p>
+
+      <div class="motivasi" id="motivasi">Semangat terus, kamu pasti bisa! 💪</div>
+
+      <button class="btn btn-green btn-big" id="btnMulai">🎁 ISI FORM KLAIM HADIAH</button>
+
+      <div class="foot">© Yannss Store • Gaskeun, jangan sampai ketinggalan!</div>
+    </section>
+
+    <!-- ========== LAYAR 2: FORM KLAIM ========== -->
+    <section class="screen" id="screen-form">
+      <div class="panel">
+        <div class="panel-head">📝 Form Klaim Hadiah</div>
+        <div class="panel-body">
+          <form id="claimForm" novalidate autocomplete="off">
+
+            <div class="field" id="f-nama">
+              <label class="lbl" for="nama">👤 Nama</label>
+              <input type="text" id="nama" placeholder="Masukkan nama kamu" autocomplete="name">
+              <div class="err">Nama wajib diisi ya!</div>
+            </div>
+
+            <div class="field" id="f-usn">
+              <label class="lbl" for="usn">🎮 Username (USN)</label>
+              <input type="text" id="usn" placeholder="Contoh: YannsPlayer123" autocapitalize="off" autocorrect="off" spellcheck="false">
+              <div class="err">Username wajib diisi ya!</div>
+            </div>
+
+            <div class="field" id="f-asal">
+              <label class="lbl" for="asal">📍 Asal Mana</label>
+              <input type="text" id="asal" placeholder="Contoh: Jakarta">
+              <div class="err">Asal wajib diisi ya!</div>
+            </div>
+
+            <div class="field" id="f-kelas">
+              <label class="lbl" for="kelas">🏫 Kelas</label>
+              <input type="text" id="kelas" placeholder="Contoh: 9A / XI IPA 2">
+              <div class="err">Kelas wajib diisi ya!</div>
+            </div>
+
+            <!-- PERTANYAAN KLAIM REWARD -->
+            <div class="field" id="f-tipeKlaim">
+              <label class="lbl">🎁 Opsi Klaim Reward</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="tipeKlaim" value="juara">
+                  <span>🏆 Ambil hadiah sesuai juara</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="tipeKlaim" value="spin">
+                  <span>🎰 Di Tukar Dengan Spin</span>
+                </label>
+              </div>
+              <div class="err">Pilih opsi klaim reward kamu!</div>
+            </div>
+
+            <!-- PILIH GAME (Tampil jika pilih Tukar Spin) -->
+            <div class="field hidden" id="f-pilihGame">
+              <label class="lbl">🎮 PILIH GAME</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="pilihGame" value="roblox">
+                  <span>🔴 Roblox</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="pilihGame" value="freefire">
+                  <span>🔥 Free Fire</span>
+                </label>
+              </div>
+              <div class="err">Silakan pilih game terlebih dahulu!</div>
+            </div>
+
+            <!-- WAKTU KLAIM (Tampil jika Ambil Hadiah Sesuai Juara) -->
+            <div class="field hidden" id="f-waktu">
+              <label class="lbl">⏰ Pilih Waktu Klaim Hadiah</label>
+              <div class="time-grid" id="timeGrid"></div>
+              <div class="err">Pilih salah satu waktu klaim dulu ya!</div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-green" id="btnSubmitForm">🚀 PROSES SEKARANG</button>
+              <button type="button" class="btn btn-gray" id="btnKembali">← Kembali</button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== LAYAR 3: SPIN WHEEL (UJI KEBERUNTUNGAN MU) ========== -->
+    <section class="screen" id="screen-spin">
+      <div class="tag">🎰 LUCKY WHEEL 🎰</div>
+      <h1 class="title" style="font-size:clamp(32px,8vw,52px); margin-bottom: 8px;">
+        Uji Keberuntungan <span>Mu!</span>
+      </h1>
+      <p class="sub" id="spinSubText">Putar roda dan dapatkan hadiah menarik!</p>
+
+      <div class="wheel-container">
+        <div class="wheel-outer-ring">
+          <canvas id="spinCanvas" width="500" height="500"></canvas>
+        </div>
+        <div class="wheel-pointer"></div>
+        <div class="wheel-center-btn" id="btnSpin">SPIN!</div>
+      </div>
+
+      <div class="spin-result-box" id="spinResultText"></div>
+
+      <div class="actions" style="margin-top:20px; width:100%; max-width:380px;">
+        <button class="btn btn-green hidden" id="btnKlaimSpin">🚀 KLAIM HASIL SPIN KE WHATSAPP</button>
+        <button class="btn btn-gray" id="btnKembaliFormSpin">← Ulangi Form</button>
+      </div>
+    </section>
+
+    <!-- ========== LAYAR 4: MENGIRIM / LOADING ========== -->
+    <section class="screen" id="screen-send">
+      <div class="spinner"></div>
+      <h2 class="send-title">Data kamu sudah siap! 🎉</h2>
+      <p class="sub">Lagi mengarahkan kamu ke WhatsApp...</p>
+
+      <div class="bar"><i id="barFill"></i></div>
+
+      <p class="note">Nanti di WhatsApp, tekan tombol <b>Kirim</b> ya, supaya form kamu masuk dan hadiahnya bisa diproses. ✅</p>
+
+      <div class="row">
+        <a class="btn btn-blue" id="btnWA" href="#" target="_blank" rel="noopener">💬 Buka WhatsApp Sekarang</a>
+        <button class="btn btn-gray" id="btnUlang">Isi Form Lagi</button>
+      </div>
+    </section>
+
+  </main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ====== PENGATURAN ====== */
+  var NO_WA = "6285954440089"; 
+
+  var KATA_SEMANGAT = [
+    "Semangat terus, kamu pasti bisa! 💪",
+    "Hadiah spesial lagi nungguin kamu! 🎁",
+    "Level up hari ini, jangan sampai ketinggalan! ⚡",
+    "Kamu keren banget, gaskeun! 🔥",
+    "Setiap pemain hebat berawal dari berani mencoba! 🏆",
+    "Hari ini harimu, ayo klaim hadiahnya! 🌟"
+  ];
+
+  /* LIST HADIAH ROBLOX & FREE FIRE */
+  var ROBLOX_ITEMS = [
+    "10 Robux", "Zonk!", "20 Robux", "Zonk!", "30 Robux", "Zonk!", 
+    "40 Robux", "Zonk!", "50 Robux", "Zonk!", "60 Robux", "Zonk!", 
+    "70 Robux", "Zonk!", "80 Robux", "Zonk!", "90 Robux", "Zonk!", 
+    "100 Robux", "⭐ 300 ROBUX ⭐"
+  ];
+
+  var FF_ITEMS = [
+    "10 Diamond", "Zonk!", "20 Diamond", "Zonk!", "35 Diamond", "Zonk!", 
+    "50 Diamond", "Zonk!", "70 Diamond", "Zonk!", "100 Diamond", "Zonk!", 
+    "140 Diamond", "Zonk!", "200 Diamond", "Zonk!", "⭐ 355 DIAMOND ⭐"
+  ];
+
+  /* ====== ELEMEN ====== */
+  var $ = function (id) { return document.getElementById(id); };
+  var screens = {
+    welcome: $("screen-welcome"),
+    form: $("screen-form"),
+    spin: $("screen-spin"),
+    send: $("screen-send")
+  };
+
+  function tampil(nama) {
+    for (var k in screens) screens[k].classList.remove("active");
+    screens[nama].classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  /* ====== BALOK MELAYANG ====== */
+  (function buatBalok() {
+    var wrap = $("cubes");
+    var warna = ["#00a2ff", "#ffd23f", "#2fe27f", "#ff4d4d", "#b36bff", "#ffffff"];
+    for (var i = 0; i < 16; i++) {
+      var d = document.createElement("div");
+      var size = 22 + Math.random() * 46;
+      d.className = "cube";
+      d.style.width = size + "px";
+      d.style.height = size + "px";
+      d.style.left = Math.random() * 100 + "%";
+      d.style.background = warna[i % warna.length] + "55";
+      d.style.animationDuration = 9 + Math.random() * 12 + "s";
+      d.style.animationDelay = -Math.random() * 15 + "s";
+      wrap.appendChild(d);
+    }
+  })();
+
+  /* ====== KATA SEMANGAT BERGANTIAN ====== */
+  (function putarSemangat() {
+    var el = $("motivasi");
+    var i = 0;
+    setInterval(function () {
+      el.classList.add("hide");
+      setTimeout(function () {
+        i = (i + 1) % KATA_SEMANGAT.length;
+        el.textContent = KATA_SEMANGAT[i];
+        el.classList.remove("hide");
+      }, 350);
+    }, 3200);
+  })();
+
+  /* ====== PILIHAN WAKTU 06.00 - 24.00 ====== */
+  (function buatWaktu() {
+    var grid = $("timeGrid");
+    for (var h = 6; h <= 24; h++) {
+      var label = (h < 10 ? "0" + h : "" + h) + ".00";
+      var l = document.createElement("label");
+      l.className = "chip";
+      l.innerHTML =
+        '<input type="radio" name="waktu" value="' + label + '">' +
+        "<span>" + label + "</span>";
+      grid.appendChild(l);
+    }
+  })();
+
+  /* ====== NAVIGASI & INTERAKSI RADIO FORM ====== */
+  $("btnMulai").addEventListener("click", function () { tampil("form"); });
+  $("btnKembali").addEventListener("click", function () { tampil("welcome"); });
+  $("btnKembaliFormSpin").addEventListener("click", function () { tampil("form"); });
+  $("btnUlang").addEventListener("click", function () {
+    $("claimForm").reset();
+    resetFormDynamicFields();
+    $("barFill").style.width = "0";
+    tampil("form");
+  });
+
+  function resetFormDynamicFields() {
+    $("f-pilihGame").classList.add("hidden");
+    $("f-waktu").classList.add("hidden");
+  }
+
+  // Toggle Opsi Klaim (Juara vs Spin)
+  var tipeKlaimRadios = document.getElementsByName("tipeKlaim");
+  for (var i = 0; i < tipeKlaimRadios.length; i++) {
+    tipeKlaimRadios[i].addEventListener("change", function () {
+      $("f-tipeKlaim").classList.remove("error");
+      if (this.value === "juara") {
+        $("f-waktu").classList.remove("hidden");
+        $("f-pilihGame").classList.add("hidden");
+      } else if (this.value === "spin") {
+        $("f-pilihGame").classList.remove("hidden");
+        $("f-waktu").classList.add("hidden");
+      }
+    });
+  }
+
+  var gameRadios = document.getElementsByName("pilihGame");
+  for (var j = 0; j < gameRadios.length; j++) {
+    gameRadios[j].addEventListener("change", function () {
+      $("f-pilihGame").classList.remove("error");
+    });
+  }
+
+  // Hapus error saat input
+  ["nama", "usn", "asal", "kelas"].forEach(function (id) {
+    $(id).addEventListener("input", function () {
+      $("f-" + id).classList.remove("error");
+    });
+  });
+  $("timeGrid").addEventListener("change", function () {
+    $("f-waktu").classList.remove("error");
+  });
+
+  /* ====== FORM SUBMIT LOGIC ====== */
+  var formDataUser = {};
+
+  $("claimForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    var nama = $("nama").value.trim();
+    var usn = $("usn").value.trim();
+    var asal = $("asal").value.trim();
+    var kelas = $("kelas").value.trim();
+    
+    var tipeKlaimEl = document.querySelector('input[name="tipeKlaim"]:checked');
+    var tipeKlaim = tipeKlaimEl ? tipeKlaimEl.value : "";
+
+    var gameEl = document.querySelector('input[name="pilihGame"]:checked');
+    var pilihGame = gameEl ? gameEl.value : "";
+
+    var waktuEl = document.querySelector('input[name="waktu"]:checked');
+    var waktu = waktuEl ? waktuEl.value : "";
+
+    // Validasi
+    var valid = true;
+    var pertamaError = null;
+
+    function setError(boxId, isError) {
+      var b = $(boxId);
+      if (isError) {
+        b.classList.add("error");
+        if (!pertamaError) pertamaError = b;
+        valid = false;
+      } else {
+        b.classList.remove("error");
+      }
+    }
+
+    setError("f-nama", !nama);
+    setError("f-usn", !usn);
+    setError("f-asal", !asal);
+    setError("f-kelas", !kelas);
+    setError("f-tipeKlaim", !tipeKlaim);
+
+    if (tipeKlaim === "juara") {
+      setError("f-waktu", !waktu);
+    } else if (tipeKlaim === "spin") {
+      setError("f-pilihGame", !pilihGame);
+    }
+
+    if (!valid) {
+      pertamaError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    // Simpan Data
+    formDataUser = {
+      nama: nama,
+      usn: usn,
+      asal: asal,
+      kelas: kelas,
+      tipeKlaim: tipeKlaim,
+      pilihGame: pilihGame,
+      waktu: waktu
+    };
+
+    if (tipeKlaim === "juara") {
+      // Langsung Kirim Ke WA Hadiah Juara
+      var pesanJuara =
+        "🎁 *KLAIM HADIAH JUARA - YANNSS STORE* 🎁\n\n" +
+        "👤 Nama: " + nama + "\n" +
+        "🎮 Username: " + usn + "\n" +
+        "📍 Asal: " + asal + "\n" +
+        "🏫 Kelas: " + kelas + "\n" +
+        "⏰ Waktu Klaim: " + waktu + "\n\n" +
+        "Mohon diproses hadiah juara saya ya kak, terima kasih! 🙏";
+
+      prosesKirimWA(pesanJuara);
+    } else {
+      // Buka Halaman Lucky Spin
+      persiapkanSpin(pilihGame);
+      tampil("spin");
+    }
+  });
+
+  /* ====== LOGIKA WHEEL SPIN (CANVAS & EFEK SPESIAL) ====== */
+  var canvas = $("spinCanvas");
+  var ctx = canvas.getContext("2d");
+  var currentItems = [];
+  var currentRotation = 0;
+  var isSpinning = false;
+  var hasilHadiahSpin = "";
+
+  function persiapkanSpin(game) {
+    currentItems = (game === "roblox") ? ROBLOX_ITEMS : FF_ITEMS;
+    $("spinSubText").textContent = (game === "roblox") ? 
+      "🎮 Spin Hadiah Roblox Robux Kamu!" : 
+      "🔥 Spin Hadiah Free Fire Diamond Kamu!";
+    
+    $("spinResultText").textContent = "";
+    $("btnKlaimSpin").classList.add("hidden");
+    $("btnSpin").style.pointerEvents = "auto";
+    currentRotation = 0;
+    canvas.style.transform = "rotate(0deg)";
+    gambarRoda();
+  }
+
+  function gambarRoda() {
+    var numOptions = currentItems.length;
+    var arcSize = (2 * Math.PI) / numOptions;
+    var radius = canvas.width / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (var i = 0; i < numOptions; i++) {
+      var angle = i * arcSize;
+      var item = currentItems[i];
+
+      // Warna Sektor Bergantian
+      ctx.beginPath();
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, angle, angle + arcSize);
+      ctx.lineTo(radius, radius);
+
+      var isSpecial = item.indexOf("⭐") !== -1;
+      var isZonk = item === "Zonk!";
+
+      if (isSpecial) {
+        // Efek Emas/Glow Khusus Spesial
+        ctx.fillStyle = "#ffd23f";
+      } else if (isZonk) {
+        ctx.fillStyle = (i % 2 === 0) ? "#2a2d32" : "#1e2024";
+      } else {
+        var colors = ["#00a2ff", "#02b757", "#9b51e0", "#ff9f43", "#e84393", "#00cec9"];
+        ctx.fillStyle = colors[i % colors.length];
+      }
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.stroke();
+
+      // Teks Sektor
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(angle + arcSize / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = isSpecial ? "#000" : "#fff";
+      ctx.font = isSpecial ? "bold 17px Fredoka" : "600 14px Fredoka";
+
+      if (isSpecial) {
+        // Gambar Efek Teks Spesial
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = 10;
+      }
+
+      ctx.fillText(item, radius - 20, 5);
+      ctx.restore();
+    }
+  }
+
+  $("btnSpin").addEventListener("click", function () {
+    if (isSpinning) return;
+    isSpinning = true;
+    $("btnSpin").style.pointerEvents = "none";
+    $("spinResultText").textContent = "Semoga Beruntung... 🎰";
+    $("btnKlaimSpin").classList.add("hidden");
+
+    var numOptions = currentItems.length;
+    var randomIndex = Math.floor(Math.random() * numOptions);
+    var degreesPerSegment = 360 / numOptions;
+
+    // Hitung Sudut Berhenti (Penunjuk di Atas = 270 Deg pada Canvas Standard)
+    var targetSegmentDegree = (randomIndex * degreesPerSegment) + (degreesPerSegment / 2);
+    var extraTurns = 5 * 360; // 5 Putaran Penuh
+    var totalDegree = extraTurns + (360 - targetSegmentDegree) - 90;
+
+    currentRotation += totalDegree;
+    canvas.style.transform = "rotate(" + currentRotation + "deg)";
+
+    setTimeout(function () {
+      isSpinning = false;
+      hasilHadiahSpin = currentItems[randomIndex];
+
+      if (hasilHadiahSpin === "Zonk!") {
+        $("spinResultText").textContent = "Yah... Kamu dapat Zonk! 😅 Tetap semangat!";
+      } else {
+        $("spinResultText").textContent = "SELAMAT! Kamu Menerima: " + hasilHadiahSpin + " 🎉";
+        
+        // Pesta Confetti Efek Kemenangan
+        if (typeof confetti === "function") {
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        }
+      }
+
+      $("btnKlaimSpin").classList.remove("hidden");
+    }, 5000);
+  });
+
+  // Tombol Klaim Hadiah Spin ke WA
+  $("btnKlaimSpin").addEventListener("click", function () {
+    var gameName = (formDataUser.pilihGame === "roblox") ? "Roblox" : "Free Fire";
+    var pesanSpin =
+      "🎰 *KLAIM LUCKY SPIN - YANNSS STORE* 🎰\n\n" +
+      "👤 Nama: " + formDataUser.nama + "\n" +
+      "🎮 Username: " + formDataUser.usn + "\n" +
+      "📍 Asal: " + formDataUser.asal + "\n" +
+      "🏫 Kelas: " + formDataUser.kelas + "\n" +
+      "🎯 Game Spin: " + gameName + "\n" +
+      "🎁 Hasil Spin: *" + hasilHadiahSpin + "*\n\n" +
+      "Mohon diproses hadiah hasil spin saya ya kak, terima kasih! 🙏";
+
+    prosesKirimWA(pesanSpin);
+  });
+
+  /* ====== REDIRECT KE WHATSAPP ====== */
+  var timerKirim = null;
+
+  function prosesKirimWA(pesan) {
+    var url = "https://wa.me/" + NO_WA + "?text=" + encodeURIComponent(pesan);
+
+    $("btnWA").href = url;
+    tampil("send");
+
+    $("barFill").style.width = "0";
+    setTimeout(function () { $("barFill").style.width = "100%"; }, 60);
+
+    clearTimeout(timerKirim);
+    timerKirim = setTimeout(function () {
+      window.location.href = url;
+    }, 2300);
+  }
+
+})();
+</script>
+</body>
+</html>
